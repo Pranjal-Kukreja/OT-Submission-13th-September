@@ -1,0 +1,96 @@
+##########################################################################################
+BIG-M SIMPLEX METHOD  -  Case Study: THE DIET PROBLEM (a classic LPP)
+##########################################################################################
+
+Problem formulation
+--------------------
+Minimize   Z  = 2 x1 + 3 x2                       (cost of the diet)
+subject to
+    x1 + 2 x2 >= 40      (minimum requirement of Nutrient A)
+    x1 +   x2 >= 30      (minimum requirement of Nutrient B)
+    x1, x2 >= 0
+
+Standard form (Big-M)
+-----------------------
+    x1 + 2x2 - s1 + a1              = 40
+    x1 +  x2       - s2 + a2        = 30
+    Minimize Z = 2x1 + 3x2 + 0.s1 + 0.s2 + M.a1 + M.a2
+
+==========================================================================================
+INITIAL TABLEAU (starting basic feasible solution using artificial vars)
+==========================================================================================
+
+--- Iteration 0 ---
+Basis         x1         x2         s1         a1         s2         a2        RHS
+   a1      1.000      2.000     -1.000      1.000      0.000      0.000     40.000
+   a2      1.000      1.000      0.000      0.000     -1.000      1.000     30.000
+         x1          x2           s1         a1           s2         a2
+1999998.000 2999997.000 -1000000.000      0.000 -1000000.000      0.000
+Current objective value (in original 'min' sense): 70000000.0000
+
+--- Iteration 1 ---
+Basis         x1         x2         s1         a1         s2         a2        RHS
+   a1      1.000      2.000     -1.000      1.000      0.000      0.000     40.000
+   a2      1.000      1.000      0.000      0.000     -1.000      1.000     30.000
+         x1          x2           s1         a1           s2         a2
+1999998.000 2999997.000 -1000000.000      0.000 -1000000.000      0.000
+Current objective value (in original 'min' sense): 70000000.0000
+Ratio test (RHS / pivot column, only rows with positive entry shown):
+Row1       20.000
+Row2       30.000
+Entering variable : x2
+Leaving variable  : a1
+
+>>> Tableau AFTER pivoting:
+
+--- Iteration 1 ---
+Basis         x1         x2         s1         a1         s2         a2        RHS
+   x2      0.500      1.000     -0.500      0.500      0.000      0.000     20.000
+   a2      0.500      0.000      0.500     -0.500     -1.000      1.000     10.000
+        x1         x2         s1           a1           s2         a2
+499999.500      0.000 499998.500 -1499998.500 -1000000.000      0.000
+Current objective value (in original 'min' sense): 10000060.0000
+
+--- Iteration 2 ---
+Basis         x1         x2         s1         a1         s2         a2        RHS
+   x2      0.500      1.000     -0.500      0.500      0.000      0.000     20.000
+   a2      0.500      0.000      0.500     -0.500     -1.000      1.000     10.000
+        x1         x2         s1           a1           s2         a2
+499999.500      0.000 499998.500 -1499998.500 -1000000.000      0.000
+Current objective value (in original 'min' sense): 10000060.0000
+Ratio test (RHS / pivot column, only rows with positive entry shown):
+Row1       40.000
+Row2       20.000
+Entering variable : x1
+Leaving variable  : a2
+
+>>> Tableau AFTER pivoting:
+
+--- Iteration 2 ---
+Basis         x1         x2         s1         a1         s2         a2        RHS
+   x2      0.000      1.000     -1.000      1.000      1.000     -1.000     10.000
+   x1      1.000      0.000      1.000     -1.000     -2.000      2.000     20.000
+        x1         x2         s1          a1         s2          a2
+     0.000      0.000     -1.000 -999999.000     -1.000 -999999.000
+Current objective value (in original 'min' sense): 70.0000
+
+==========================================================================================
+FINAL RESULT
+==========================================================================================
+Number of simplex iterations : 2
+Optimal decision variable values:
+    x1 = 20.0000
+    x2 = 10.0000
+Optimal objective value Z* = 70.0000
+
+Verification of constraints at the optimal point:
+    x1 + 2x2 = 40.0000  (>= 40 required)
+    x1 +  x2 = 30.0000  (>= 30 required)
+SciPy linprog verification
+----------------------------------------
+Status  : Optimization terminated successfully. (HiGHS Status 7: Optimal)
+x1      : 20.0000
+x2      : 10.0000
+Z*      : 70.0000
+
+Expected from Big-M simplex: x1 = 20, x2 = 10, Z* = 70

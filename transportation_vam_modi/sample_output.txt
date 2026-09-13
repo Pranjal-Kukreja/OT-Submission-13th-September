@@ -1,0 +1,150 @@
+##########################################################################################
+TRANSPORTATION PROBLEM  -  VAM (initial BFS) + MODI (optimality & improvement)
+##########################################################################################
+
+Problem formulation
+--------------------
+3 factories (S1,S2,S3) ship a single product to 4 warehouses
+(D1,D2,D3,D4). Unit shipping costs, factory supplies and warehouse
+demands are given below. Find the shipment plan that minimizes total
+transportation cost (total supply = total demand = 34, balanced).
+
+Cost matrix (rows = sources, columns = destinations):
+    D1  D2  D3  D4
+S1  19  30  50  10
+S2  70  30  40  60
+S3  40   8  70  20
+Supply: {'S1': 7, 'S2': 9, 'S3': 18}
+Demand: {'D1': 5, 'D2': 8, 'D3': 7, 'D4': 14}
+
+==========================================================================================
+STEP 1 : VOGEL'S APPROXIMATION METHOD (VAM) - Initial Basic Feasible Solution
+==========================================================================================
+
+-- VAM Step 1: Row penalties:
+Row  Penalty
+ S1        9
+ S2       10
+ S3       12
+   Column penalties:
+Column  Penalty
+    D1       21
+    D2       22
+    D3       10
+    D4       10
+   -> Allocate 8 units to cell (S3, D2) [cost = 8]  (remaining supply S3=10, remaining demand D2=0)
+
+-- VAM Step 2: Row penalties:
+Row  Penalty
+ S1        9
+ S2       20
+ S3       20
+   Column penalties:
+Column  Penalty
+    D1       21
+    D3       10
+    D4       10
+   -> Allocate 5 units to cell (S1, D1) [cost = 19]  (remaining supply S1=2, remaining demand D1=0)
+
+-- VAM Step 3: Row penalties:
+Row  Penalty
+ S1       40
+ S2       20
+ S3       50
+   Column penalties:
+Column  Penalty
+    D3       10
+    D4       10
+   -> Allocate 10 units to cell (S3, D4) [cost = 20]  (remaining supply S3=0, remaining demand D4=4)
+
+-- VAM Step 4: Row penalties:
+Row  Penalty
+ S1       40
+ S2       20
+   Column penalties:
+Column  Penalty
+    D3       10
+    D4       50
+   -> Allocate 2 units to cell (S1, D4) [cost = 10]  (remaining supply S1=0, remaining demand D4=2)
+   -> Allocate 7 units to cell (S2, D3) [cost = 40]  (remaining supply S2=2, remaining demand D3=0)
+   -> Allocate 2 units to cell (S2, D4) [cost = 60]  (remaining supply S2=0, remaining demand D4=0)
+
+VAM initial allocation complete.
+
+VAM Initial Basic Feasible Solution:
+    D1  D2  D3  D4
+S1   5   0   0   2
+S2   0   0   7   2
+S3   0   8   0  10
+Initial (VAM) total transportation cost = 779.000
+
+==========================================================================================
+STEP 2 : MODI (MODIFIED DISTRIBUTION) METHOD - Optimality test & improvement
+==========================================================================================
+
+--- MODI Iteration 1 ---
+Current allocation:
+   D1 D2 D3  D4
+S1  5         2
+S2        7   2
+S3     8     10
+u_i : {'S1': 0, 'S2': 50, 'S3': 10}
+v_j : {'D1': 19, 'D2': -2, 'D3': -10, 'D4': 10}
+Opportunity costs d_ij = c_ij - (u_i+v_j)  for non-basic cells:
+       D1     D2     D3     D4
+S1  basic     32     60  basic
+S2      1    -18  basic  basic
+S3     11  basic     70  basic
+
+Most negative opportunity cost at ('S2', 'D2') = -18.000  ->  this cell ENTERS the basis.
+Closed loop: +(S2,D2) -> -(S2,D4) -> +(S3,D4) -> -(S3,D2)
+theta (max units shiftable) = min allocation among '-' cells = 2.000
+Leaving cell (drops to 0): (S2, D4)
+New allocation after reallocating 2.000 units around the loop:
+
+--- MODI Iteration 2 ---
+Current allocation:
+   D1 D2 D3  D4
+S1  5         2
+S2     2  7    
+S3     6     12
+u_i : {'S1': 0, 'S2': 32, 'S3': 10}
+v_j : {'D1': 19, 'D2': -2, 'D3': 8, 'D4': 10}
+Opportunity costs d_ij = c_ij - (u_i+v_j)  for non-basic cells:
+       D1     D2     D3     D4
+S1  basic     32     42  basic
+S2     19  basic  basic     18
+S3     11  basic     52  basic
+
+All opportunity costs >= 0  ->  current solution is OPTIMAL.
+
+==========================================================================================
+FINAL RESULT - OPTIMAL SHIPMENT PLAN
+==========================================================================================
+    D1  D2  D3  D4
+S1   5   0   0   2
+S2   0   2   7   0
+S3   0   6   0  12
+
+Shipments (source -> destination : units, cost):
+   S1 -> D1 : 5.000 units x 19 = 95.000
+   S1 -> D4 : 2.000 units x 10 = 20.000
+   S2 -> D2 : 2.000 units x 30 = 60.000
+   S2 -> D3 : 7.000 units x 40 = 280.000
+   S3 -> D2 : 6.000 units x 8 = 48.000
+   S3 -> D4 : 12.000 units x 20 = 240.000
+
+MINIMUM TOTAL TRANSPORTATION COST = 743.000
+
+
+============================================================
+SciPy linprog verification
+--------------------------------------------------
+Status : Optimization terminated successfully. (HiGHS Status 7: Optimal)
+Optimal shipment plan (rows=S1..S3, cols=D1..D4):
+[[ 5.  0.  0.  2.]
+ [ 0.  2.  7.  0.]
+ [ 0.  6.  0. 12.]]
+
+Minimum total cost (SciPy) = 743.000
+Expected from VAM + MODI implementation: 743.000
